@@ -1,5 +1,7 @@
 package com.kursaddcinar.hms_backend.service;
 
+import com.kursaddcinar.hms_backend.dto.DtoTokenResponse;
+import com.kursaddcinar.hms_backend.dto.DtoUserLogin;
 import com.kursaddcinar.hms_backend.dto.DtoUserRegister;
 import com.kursaddcinar.hms_backend.data.entity.User;
 
@@ -8,4 +10,5 @@ public interface IUserService {
     // Dönüş tipi olarak Entity (User) dönüyorum ki Controller katmanında
     // veya testlerde sonucunu görebilelim. İleride bunu da DTO'ya çevireceğiz.
     User register(DtoUserRegister registerDto);
+    DtoTokenResponse login(DtoUserLogin loginDto);
 }

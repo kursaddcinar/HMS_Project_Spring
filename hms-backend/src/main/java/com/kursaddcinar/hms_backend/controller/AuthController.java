@@ -1,5 +1,7 @@
 package com.kursaddcinar.hms_backend.controller;
 
+import com.kursaddcinar.hms_backend.dto.DtoTokenResponse;
+import com.kursaddcinar.hms_backend.dto.DtoUserLogin;
 import com.kursaddcinar.hms_backend.dto.DtoUserRegister;
 import com.kursaddcinar.hms_backend.data.entity.User;
 import com.kursaddcinar.hms_backend.service.IUserService;
@@ -24,5 +26,10 @@ public class AuthController {
         // Eğer kurala uymazsa Spring otomatik 400 Bad Request döner.
 
         return ResponseEntity.ok(userService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<DtoTokenResponse> login(@RequestBody DtoUserLogin request) {
+        return ResponseEntity.ok(userService.login(request));
     }
 }
