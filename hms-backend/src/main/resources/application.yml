@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: hms-backend
+  data:
+    mongodb:
+      # Ba?lant? dizgisi (Connection String).
+      # SQL'deki JDBC URL'sinin kar??l???d?r.
+      # Varsay?lan port: 27017, Veritaban? ad?: hms_db
+      uri: mongodb://localhost:27017/hms_db
+
+      # Otomatik ?ndeksleme:
+      # SQL'de indeksleri manuel olu?tururuz. Burada ise kod içinde @Indexed
+      # anotasyonu kulland???m?zda Mongo'nun bunu otomatik olu?turmas?n? sa?lar.
+      auto-index-creation: true
+
+server:
+  port: 8080 # Backend'in çal??aca?? port
