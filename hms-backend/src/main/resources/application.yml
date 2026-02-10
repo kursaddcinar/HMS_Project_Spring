@@ -5,19 +5,18 @@ spring:
     mongodb:
       # Baglanti dizgisi (Connection String).
       # SQL'deki JDBC URL'sinin karsilasdirir.
-      # Varsayilan port: 27017, Veritabani ad?: hms_db
+      # Varsayilan port: 27017, Veritabani adi: hms_db
       uri: mongodb://localhost:27017/hms_db
 
       # Otomatik indeksleme:
-      # SQL'de indeksleri manuel olustururuz. Burada ise kod içinde @Indexed
+      # SQL'de indeksleri manuel olustururuz. Burada ise kod icinde @Indexed
       # anotasyonu kullandigimizda Mongo'nun bunu otomatik olusturmasini saglar.
       auto-index-creation: true
 
 server:
-  port: 8080 # Backend'in çal??aca?? port
+  port: 8080 # Backend'in calisacagi port
 
 jwt:
-  # Bu anahtar 256-bit ?ifreleme için yeterince uzun ve karma??k olmal?.
-  # Rastgele bir string ürettim, bunu kullanabilirsin.
+  # Bu anahtar 256-bit sifreleme icin yeterince uzun ve karmasikk olmali.
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 86400000 # 1 Gün (milisaniye cinsinden: 24 * 60 * 60 * 1000)
+  expiration: 86400000 # 1 Gun (milisaniye cinsinden: 24 * 60 * 60 * 1000)
