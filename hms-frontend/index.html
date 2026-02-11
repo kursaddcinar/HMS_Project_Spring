@@ -36,20 +36,24 @@
     </div>
 </div>
 
-<div id="dashboard-section" class="d-none">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-3">
-        <a class="navbar-brand" href="#">HMS Panel</a>
-        <div class="ms-auto">
-            <span id="user-display" class="text-white me-3"></span>
-            <button id="logout-btn" class="btn btn-outline-light btn-sm">Çıkış</button>
+<div id="dashboard-section" class="d-none vh-100 d-flex flex-column">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm" style="height: 60px;">
+        <a class="navbar-brand fw-bold" href="#">🏥 HMS Panel</a>
+        <div class="ms-auto d-flex align-items-center">
+            <span id="user-display" class="text-white me-3 small"></span>
+            <button id="logout-btn" class="btn btn-outline-danger btn-sm">Çıkış</button>
         </div>
     </nav>
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-12" id="main-content">
-                <h1>Hoşgeldiniz</h1>
+
+    <div class="container-fluid flex-grow-1 d-flex p-0">
+
+        <aside class="bg-dark text-white p-3" style="width: 250px; min-height: 100%;">
+            <div id="sidebar-menu">
             </div>
-        </div>
+        </aside>
+
+        <main class="flex-grow-1 p-4 bg-light overflow-auto" id="main-content">
+        </main>
     </div>
 </div>
 

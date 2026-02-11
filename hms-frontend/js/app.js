@@ -1,4 +1,5 @@
 import { AuthService } from './auth.js';
+import { Dashboard } from './dashboard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
@@ -14,9 +15,13 @@ function initApp() {
 
     // Durum Kontrolü
     if (AuthService.isAuthenticated()) {
-        authSection.classList.add('d-none');
-        dashboardSection.classList.remove('d-none');
-        userDisplay.textContent = AuthService.getCurrentUser();
+            authSection.classList.add('d-none');
+            dashboardSection.classList.remove('d-none');
+            userDisplay.textContent = AuthService.getCurrentUser();
+
+            // Dashboard'ı Başlat
+            const dashboard = new Dashboard();
+            dashboard.init();
     } else {
         authSection.classList.remove('d-none');
         dashboardSection.classList.add('d-none');
