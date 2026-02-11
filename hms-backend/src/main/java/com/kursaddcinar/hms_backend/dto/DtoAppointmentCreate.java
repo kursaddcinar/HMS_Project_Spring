@@ -19,4 +19,7 @@ public class DtoAppointmentCreate {
 
     @NotNull
     private LocalDateTime appointmentDate; // Hangi saat?
+
+    @NotNull
+    private String patientId;
 }

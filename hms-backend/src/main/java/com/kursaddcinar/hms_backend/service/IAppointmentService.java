@@ -2,6 +2,7 @@ package com.kursaddcinar.hms_backend.service;
 
 import com.kursaddcinar.hms_backend.data.entity.Appointment;
 import com.kursaddcinar.hms_backend.dto.DtoAppointmentCreate;
+import com.kursaddcinar.hms_backend.dto.DtoAppointmentResponse;
 
 import java.util.List;
 
@@ -17,5 +18,5 @@ public interface IAppointmentService {
     List<Appointment> getAppointmentsByDoctor(String doctorId);
 
     // 4. Hastanın kendi randevularını getir
-    List<Appointment> getAppointmentsByPatient(String patientId);
+    List<DtoAppointmentResponse> getAppointmentsByPatient(String patientId);
 }

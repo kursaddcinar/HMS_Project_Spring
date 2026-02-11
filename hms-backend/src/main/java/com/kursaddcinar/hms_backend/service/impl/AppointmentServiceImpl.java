@@ -1,9 +1,14 @@
 package com.kursaddcinar.hms_backend.service.impl;
 
 import com.kursaddcinar.hms_backend.data.entity.Appointment;
+import com.kursaddcinar.hms_backend.data.entity.Doctor;
+import com.kursaddcinar.hms_backend.data.entity.User;
 import com.kursaddcinar.hms_backend.data.enums.AppointmentStatus;
 import com.kursaddcinar.hms_backend.dto.DtoAppointmentCreate;
+import com.kursaddcinar.hms_backend.dto.DtoAppointmentResponse;
 import com.kursaddcinar.hms_backend.repository.IAppointmentRepository;
+import com.kursaddcinar.hms_backend.repository.IDoctorRepository;
+import com.kursaddcinar.hms_backend.repository.IUserRepository;
 import com.kursaddcinar.hms_backend.service.IAppointmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,12 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements IAppointmentService {
 
     private final IAppointmentRepository appointmentRepository;
+    private final IDoctorRepository doctorRepository;
+    private final IUserRepository userRepository;
 
     @Override
     public Appointment createAppointmentSlot(DtoAppointmentCreate request) {
@@ -34,6 +42,7 @@ public class AppointmentServiceImpl implements IAppointmentService {
         // 2. Yeni boş slot oluştur
         Appointment appointment = Appointment.builder()
                 .doctorId(request.getDoctorId())
+                .patientId(request.getPatientId())
                 .appointmentDate(request.getAppointmentDate())
                 .status(AppointmentStatus.AVAILABLE) // Başlangıçta MÜSAİT
                 .build();
@@ -74,7 +83,36 @@ public class AppointmentServiceImpl implements IAppointmentService {
     }
 
     @Override
-    public List<Appointment> getAppointmentsByPatient(String patientId) {
-        return appointmentRepository.findByPatientId(patientId);
+    public List<DtoAppointmentResponse> getAppointmentsByPatient(String patientId) {
+        // 1. Hastanın randevularını çek
+        List<Appointment> appointments = appointmentRepository.findByPatientId(patientId);
+
+        // 2. Her bir randevuyu DTO'ya map'le
+        return appointments.stream().map(appointment -> {
+
+            // Doktor Detaylarını Bul (Null check önemli)
+            Doctor doctor = doctorRepository.findById(appointment.getDoctorId()).orElse(null);
+            String doctorName = "Bilinmiyor";
+            String branch = "-";
+
+            if (doctor != null) {
+                User docUser = userRepository.findById(doctor.getUserId()).orElse(null);
+                branch = doctor.getBranch();
+                if (docUser != null) {
+                    doctorName = doctor.getTitle() + " " + docUser.getFirstName() + " " + docUser.getLastName();
+                }
+            }
+
+            // DTO Oluştur
+            return DtoAppointmentResponse.builder()
+                    .id(appointment.getId())
+                    .appointmentDate(appointment.getAppointmentDate())
+                    .status(appointment.getStatus().name())
+                    .doctorId(appointment.getDoctorId())
+                    .doctorFullName(doctorName) // Artık isim var!
+                    .doctorBranch(branch)
+                    .build();
+
+        }).collect(Collectors.toList());
     }
 }

@@ -1,4 +1,5 @@
 import { ApiService } from '../api.js';
+import { Utils } from '../utils.js';
 
 export class AppointmentManager {
 
@@ -76,6 +77,9 @@ export class AppointmentManager {
             const dateVal = document.getElementById('appointmentDate').value;
             const msgBox = document.getElementById('msg-box');
 
+            const token = ApiService.getToken();
+            const user = Utils.parseJwt(token);
+
             if(!doctorId || !dateVal) {
                 msgBox.innerHTML = '<div class="alert alert-warning">Lütfen tüm alanları doldurun.</div>';
                 return;
@@ -86,7 +90,8 @@ export class AppointmentManager {
 
             const payload = {
                 doctorId: doctorId,
-                appointmentDate: new Date(dateVal).toISOString() // Backend LocalDateTime bekliyor olabilir, ISO format genelde güvenlidir.
+                appointmentDate: new Date(dateVal).toISOString(), // Backend LocalDateTime bekliyor olabilir, ISO format genelde güvenlidir.
+                patientId: user.userId
             };
 
             try {
@@ -103,5 +108,95 @@ export class AppointmentManager {
 
     getLoadingSpinner() {
         return '<div class="text-center mt-5"><div class="spinner-border text-primary" role="status"></div><p>Veriler yükleniyor...</p></div>';
+    }
+
+    async renderMyAppointments() {
+        this.container.innerHTML = this.getLoadingSpinner();
+
+        try {
+            // 1. Token'dan User ID'yi al
+            const token = ApiService.getToken();
+            const user = Utils.parseJwt(token);
+
+            if (!user || !user.userId) {
+                throw new Error("Kullanıcı kimliği doğrulanamadı.");
+            }
+
+            // 2. Backend'den Randevuları Çek
+            // Endpoint: /appointments/patient/{patientId}
+            const appointments = await ApiService.request(`/appointments/patient/${user.userId}`, 'GET');
+
+            // 3. Tabloyu Render Et
+            if (appointments.length === 0) {
+                this.container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        Henüz hiç randevunuz bulunmamaktadır. <br>
+                        <a href="#" class="alert-link" onclick="document.querySelector('[data-page=appointment-create]').click()">Hemen randevu alın.</a>
+                    </div>`;
+                return;
+            }
+
+            let html = `
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Geçmiş ve Gelecek Randevularım</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Saat</th>
+                                    <th>Doktor</th>
+                                    <th>Durum</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.generateTableRows(appointments)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            this.container.innerHTML = html;
+
+        } catch (error) {
+            this.container.innerHTML = `<div class="alert alert-danger">Randevular yüklenemedi: ${error.message}</div>`;
+        }
+    }
+
+    generateTableRows(appointments) {
+        return appointments.map(app => {
+            const dateObj = new Date(app.appointmentDate);
+            const dateStr = dateObj.toLocaleDateString('tr-TR');
+            const timeStr = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+            let statusBadge = 'bg-primary';
+            if(app.status === 'CANCELLED') statusBadge = 'bg-danger';
+            if(app.status === 'COMPLETED') statusBadge = 'bg-success';
+            if(app.status === 'AVAILABLE') statusBadge = 'bg-info'; // Boş slot ise
+
+            // Backend'den gelen yeni alanları kullanıyoruz:
+            const doctorDisplay = app.doctorFullName
+                ? `${app.doctorFullName} <br> <small class="text-muted">${app.doctorBranch}</small>`
+                : 'Bilinmeyen Doktor';
+
+            return `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td>${timeStr}</td>
+                    <td>${doctorDisplay}</td>
+                    <td><span class="badge ${statusBadge}">${app.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="alert('İptal işlemi henüz aktif değil')"
+                                ${app.status === 'CANCELLED' || app.status === 'COMPLETED' ? 'disabled' : ''}>
+                            İptal
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 }

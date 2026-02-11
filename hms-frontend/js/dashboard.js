@@ -102,7 +102,8 @@ export class Dashboard {
                 break;
 
             case 'my-appointments':
-                this.contentArea.innerHTML = '<h3>Randevularım</h3><p>Yakında...</p>';
+                const listManager = new AppointmentManager('main-content');
+                listManager.renderMyAppointments();
                 break;
 
             default:
