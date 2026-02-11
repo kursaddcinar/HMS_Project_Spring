@@ -64,9 +64,12 @@ public class UserServiceImpl implements IUserService {
         var user = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow();
 
+        String role = user.getRole().name();
+
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", user.getRole()); // Örn: "role": "DOCTOR"
         extraClaims.put("userId", user.getId()); // ID'yi de eklemek pratik olur.
+        extraClaims.put("role", role);
 
         // Token üret
         var jwtToken = jwtService.generateToken(extraClaims, user);
