@@ -2,6 +2,7 @@ package com.kursaddcinar.hms_backend.service;
 
 import com.kursaddcinar.hms_backend.data.entity.Doctor;
 import com.kursaddcinar.hms_backend.dto.DtoDoctorCreate;
+import com.kursaddcinar.hms_backend.dto.DtoDoctorList;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public interface IDoctorService {
     Doctor addDoctor(DtoDoctorCreate input);
 
     // Tüm doktorları listeleme
-    List<Doctor> getAllDoctors();
+    List<DtoDoctorList> getAllDoctors();
 
     // Branşa göre doktor getirme
     List<Doctor> getDoctorsByBranch(String branch);

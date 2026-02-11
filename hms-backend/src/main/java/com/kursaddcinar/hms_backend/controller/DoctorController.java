@@ -2,6 +2,7 @@ package com.kursaddcinar.hms_backend.controller;
 
 import com.kursaddcinar.hms_backend.data.entity.Doctor;
 import com.kursaddcinar.hms_backend.dto.DtoDoctorCreate;
+import com.kursaddcinar.hms_backend.dto.DtoDoctorList;
 import com.kursaddcinar.hms_backend.service.IDoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class DoctorController {
 
     // Tüm Doktorları Listeleme (Herkese Açık)
     @GetMapping("/list")
-    public ResponseEntity<List<Doctor>> getAllDoctors() {
+    public ResponseEntity<List<DtoDoctorList>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 

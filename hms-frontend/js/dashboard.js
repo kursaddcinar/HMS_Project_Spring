@@ -1,5 +1,6 @@
 import { AuthService } from './auth.js';
 import { Utils } from './utils.js';
+import { AppointmentManager } from './modules/appointment.js';
 
 export class Dashboard {
 
@@ -80,27 +81,32 @@ export class Dashboard {
     }
 
     loadPage(pageId) {
-        this.contentArea.innerHTML = '<h3>Yükleniyor...</h3>';
+        // İçerik alanını temizle (ama loading koyma, modül kendisi halletsin)
+        this.contentArea.innerHTML = '';
 
-        // Burada ileride switch-case ile ilgili modülleri çağıracağız.
-        // Şimdilik placeholder (yer tutucu) koyuyoruz.
-        setTimeout(() => {
-            switch(pageId) {
-                case 'welcome':
-                    this.contentArea.innerHTML = `
-                        <div class="p-5 mb-4 bg-light rounded-3">
-                            <div class="container-fluid py-5">
-                                <h1 class="display-5 fw-bold">Hoşgeldiniz</h1>
-                                <p class="col-md-8 fs-4">Hastane Yönetim Sistemine başarıyla giriş yaptınız. Sol menüden işlemlerinizi gerçekleştirebilirsiniz.</p>
-                            </div>
-                        </div>`;
-                    break;
-                case 'appointment-create':
-                    this.contentArea.innerHTML = `<h3>Randevu Alma Ekranı</h3><p>Buraya doktor listesi gelecek...</p>`;
-                    break;
-                default:
-                    this.contentArea.innerHTML = `<h3>${pageId}</h3><p>Bu modül henüz yapım aşamasında.</p>`;
-            }
-        }, 300); // UI geçiş hissi için minik gecikme
+        switch(pageId) {
+            case 'welcome':
+                this.contentArea.innerHTML = `
+                    <div class="p-5 mb-4 bg-light rounded-3">
+                        <div class="container-fluid py-5">
+                            <h1 class="display-5 fw-bold">Hoşgeldiniz</h1>
+                            <p class="fs-4">Hastane Yönetim Sistemi paneline hoşgeldiniz.</p>
+                        </div>
+                    </div>`;
+                break;
+
+            case 'appointment-create':
+                // Yeni Modülü Çağır
+                const appointmentManager = new AppointmentManager('main-content');
+                appointmentManager.renderCreatePage();
+                break;
+
+            case 'my-appointments':
+                this.contentArea.innerHTML = '<h3>Randevularım</h3><p>Yakında...</p>';
+                break;
+
+            default:
+                this.contentArea.innerHTML = `<h3>${pageId}</h3><p>Bu sayfa yapım aşamasında.</p>`;
+        }
     }
 }

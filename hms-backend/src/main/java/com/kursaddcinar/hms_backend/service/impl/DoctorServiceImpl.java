@@ -4,6 +4,7 @@ import com.kursaddcinar.hms_backend.data.entity.Doctor;
 import com.kursaddcinar.hms_backend.data.entity.User;
 import com.kursaddcinar.hms_backend.data.enums.Role;
 import com.kursaddcinar.hms_backend.dto.DtoDoctorCreate;
+import com.kursaddcinar.hms_backend.dto.DtoDoctorList;
 import com.kursaddcinar.hms_backend.repository.IDoctorRepository;
 import com.kursaddcinar.hms_backend.repository.IUserRepository;
 import com.kursaddcinar.hms_backend.service.IDoctorService;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,8 +62,25 @@ public class DoctorServiceImpl implements IDoctorService {
     }
 
     @Override
-    public List<Doctor> getAllDoctors() {
-        return doctorRepository.findAll();
+    public List<DtoDoctorList> getAllDoctors() {
+        List<Doctor> doctors = doctorRepository.findAll();
+
+        return doctors.stream().map(doctor -> {
+            // İlişkili User bilgisini çekiyoruz
+            User user = userRepository.findById(doctor.getUserId()).orElse(null);
+
+            return DtoDoctorList.builder()
+                    .id(doctor.getId())
+                    .title(doctor.getTitle().name()) // Enum ise .name()
+                    .branch(doctor.getBranch())
+                    .firstName(user != null ? user.getFirstName() : "Bilinmiyor") // User boşsa patlamasın
+                    .lastName(user != null ? user.getLastName() : "")
+                    .availableDays(doctor.getAvailableDays()) // Varsa
+                    .build();
+        }).collect(Collectors.toList());
+
+
+        //return doctorRepository.findAll();
     }
 
     @Override
