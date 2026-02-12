@@ -15,7 +15,7 @@ public interface IAppointmentService {
     Appointment bookAppointment(String appointmentId, String patientId);
 
     // 3. Doktorun tüm randevularını getir (Dolu/Boş)
-    List<Appointment> getAppointmentsByDoctor(String doctorId);
+    List<DtoAppointmentResponse> getAppointmentsByDoctor(String doctorId);
 
     // 4. Hastanın kendi randevularını getir
     List<DtoAppointmentResponse> getAppointmentsByPatient(String patientId);

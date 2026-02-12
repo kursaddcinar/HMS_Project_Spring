@@ -42,7 +42,7 @@ public class AppointmentController {
 
     // 3. Doktorun Randevularını Listele
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDoctor(@PathVariable String doctorId) {
+    public ResponseEntity<List<DtoAppointmentResponse>> getAppointmentsByDoctor(@PathVariable String doctorId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctor(doctorId));
     }
 

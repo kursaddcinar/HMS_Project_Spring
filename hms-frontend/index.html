@@ -7,6 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="js/api.js" type="module"></script>
+<script src="js/auth.js" type="module"></script>
+<script src="js/app.js" type="module"></script>
+</body>
 <body class="bg-light">
 
 <div id="loading" class="d-none position-fixed w-100 h-100 top-0 start-0 bg-white bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 2000;">
@@ -54,6 +60,42 @@
 
         <main class="flex-grow-1 p-4 bg-light overflow-auto" id="main-content">
         </main>
+    </div>
+</div>
+
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Reçete Oluştur</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="prescription-form">
+                    <input type="hidden" id="modal-appointment-id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Tanı / Teşhis</label>
+                        <textarea class="form-control" id="diagnosis" rows="2" required placeholder="Örn: Akut Farenjit"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">İlaçlar</label>
+                        <div id="drug-list-container">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="İlaç Adı" required>
+                                <input type="text" class="form-control" placeholder="Doz (2x1)" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="add-drug-btn">+ İlaç Ekle</button>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Reçeteyi Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

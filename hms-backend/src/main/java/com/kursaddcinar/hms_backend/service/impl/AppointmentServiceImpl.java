@@ -28,24 +28,25 @@ public class AppointmentServiceImpl implements IAppointmentService {
 
     @Override
     public Appointment createAppointmentSlot(DtoAppointmentCreate request) {
-        // 1. Çakışma Kontrolü: Doktorun o saatte zaten bir kaydı var mı?
-        boolean isExists = appointmentRepository.existsByDoctorIdAndAppointmentDateAndStatus(
-                request.getDoctorId(),
-                request.getAppointmentDate(),
-                AppointmentStatus.AVAILABLE
-        );
+        // 1. Frontend bize Token'daki 'userId'yi gönderiyor.
+        // Ancak Appointment tablosuna 'doctorId' kaydetmeliyiz.
+        // Önce bu User ID'ye sahip doktoru bulalım.
 
-        if (isExists) {
-            throw new RuntimeException("Bu saatte zaten bir randevu slotu mevcut.");
-        }
+        Doctor doctor = doctorRepository.findByUserId(request.getDoctorId())
+                .orElseThrow(() -> new RuntimeException("Bu kullanıcı bir doktor değil!"));
 
-        // 2. Yeni boş slot oluştur
-        Appointment appointment = Appointment.builder()
-                .doctorId(request.getDoctorId())
-                .patientId(request.getPatientId())
-                .appointmentDate(request.getAppointmentDate())
-                .status(AppointmentStatus.AVAILABLE) // Başlangıçta MÜSAİT
-                .build();
+        // 2. Randevu Nesnesini Oluştur
+        Appointment appointment = new Appointment();
+
+        // DİKKAT: Request'ten gelen ID'yi değil, veritabanından bulduğumuz Doktorun ID'sini set ediyoruz.
+        appointment.setDoctorId(doctor.getId());
+
+        appointment.setAppointmentDate(request.getAppointmentDate());
+
+        // Doktor slot açıyorsa bu 'Müsait' (AVAILABLE) olmalı, 'BOOKED' değil.
+        appointment.setStatus(AppointmentStatus.AVAILABLE);
+
+        appointment.setPatientId(null); // Henüz hasta yok
 
         return appointmentRepository.save(appointment);
     }
@@ -71,15 +72,40 @@ public class AppointmentServiceImpl implements IAppointmentService {
     }
 
     @Override
-    public List<Appointment> getAppointmentsByDoctor(String doctorId) {
-        // Doktorun sadece AVAILABLE olanlarını mı yoksa hepsini mi göreceği filtreleme ile yapılabilir.
-        // Şimdilik hepsini dönüyoruz.
-        // TODO: IAppointmentRepository'ye 'findByDoctorId' metodunu eklememiz gerekebilir (Interface'e eklemiştik ama kontrol etmeliyiz).
-        // Eğer IAppointmentRepository'de findByDoctorId yoksa eklemelisin.
-        // Biz findByDoctorIdAndStatus eklemiştik, düzeltme yapıyorum:
+    public List<DtoAppointmentResponse> getAppointmentsByDoctor(String userIdOrDoctorId) {
+        // 1. Önce gelen ID'nin Doctor tablosunda doğrudan bir ID olup olmadığına bak
+        String realDoctorId = userIdOrDoctorId;
+        if (!doctorRepository.existsById(userIdOrDoctorId)) {
+            Doctor doc = doctorRepository.findByUserId(userIdOrDoctorId)
+                    .orElseThrow(() -> new RuntimeException("Doktor bulunamadı"));
+            realDoctorId = doc.getId();
+        }
 
-        return appointmentRepository.findByDoctorIdAndStatus(doctorId, AppointmentStatus.AVAILABLE);
-        // Şimdilik sadece boşları döndürelim, mantıken takvimde boş yerleri görmek isteriz.
+        // 2. Randevuları Çek
+        List<Appointment> appointments = appointmentRepository.findByDoctorId(realDoctorId);
+
+        // 3. DTO'ya Çevir ve Hasta Adını Ekle
+        return appointments.stream().map(app -> {
+
+            String patientName = "Müsait Slot"; // Eğer AVAILABLE ise hasta yoktur
+
+            // Eğer randevu doluysa (BOOKED veya COMPLETED) hastayı bul
+            if (app.getPatientId() != null) {
+                User patient = userRepository.findById(app.getPatientId()).orElse(null);
+                if (patient != null) {
+                    patientName = patient.getFirstName() + " " + patient.getLastName();
+                }
+            }
+
+            return DtoAppointmentResponse.builder()
+                    .id(app.getId())
+                    .appointmentDate(app.getAppointmentDate())
+                    .status(app.getStatus().name())
+                    .patientId(app.getPatientId())
+                    .patientFullName(patientName) // <--- İŞTE BURASI
+                    .build();
+
+        }).collect(Collectors.toList());
     }
 
     @Override

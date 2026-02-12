@@ -12,47 +12,118 @@ export class AppointmentManager {
         this.container.innerHTML = this.getLoadingSpinner();
 
         try {
-            // 1. Doktorları Backend'den Çek
+            // Doktorları Çek
             const doctors = await ApiService.request('/doctors/list', 'GET');
 
-            // 2. HTML Formunu Oluştur
             let html = `
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Yeni Randevu Al</h5>
+                        <h5 class="mb-0">📅 Randevu Al</h5>
                     </div>
                     <div class="card-body">
-                        <form id="appointment-form">
+                        <form id="appointment-step-1">
                             <div class="mb-3">
-                                <label for="doctorSelect" class="form-label">Doktor Seçin</label>
+                                <label for="doctorSelect" class="form-label">Doktor Seçiniz</label>
                                 <select class="form-select" id="doctorSelect" required>
                                     <option value="" selected disabled>Lütfen bir doktor seçiniz...</option>
                                     ${this.generateDoctorOptions(doctors)}
                                 </select>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="appointmentDate" class="form-label">Randevu Tarihi ve Saati</label>
-                                <input type="datetime-local" class="form-control" id="appointmentDate" required>
-                                <div class="form-text">Lütfen mesai saatleri içinde bir zaman seçiniz.</div>
-                            </div>
-
-                            <button type="submit" class="btn btn-success">
-                                Randevu Oluştur
-                            </button>
                         </form>
-                        <div id="msg-box" class="mt-3"></div>
+
+                        <div id="slots-container" class="mt-4 d-none">
+                            <h6 class="border-bottom pb-2">Müsait Randevu Saatleri</h6>
+                            <div id="slots-grid" class="d-flex flex-wrap gap-2"></div>
+                            <div id="no-slot-msg" class="alert alert-warning mt-2 d-none">Bu doktor için müsait zaman bulunamadı.</div>
+                        </div>
                     </div>
                 </div>
             `;
 
             this.container.innerHTML = html;
-
-            // Event Listener Ekle
-            this.attachFormListener();
+            this.attachDoctorSelectListener();
 
         } catch (error) {
-            this.container.innerHTML = `<div class="alert alert-danger">Doktor listesi yüklenemedi: ${error.message}</div>`;
+            this.container.innerHTML = `<div class="alert alert-danger">Hata: ${error.message}</div>`;
+        }
+    }
+
+    // Doktor Seçilince Slotları Getir
+    attachDoctorSelectListener() {
+        const select = document.getElementById('doctorSelect');
+        const slotsContainer = document.getElementById('slots-container');
+        const slotsGrid = document.getElementById('slots-grid');
+        const noSlotMsg = document.getElementById('no-slot-msg');
+
+        select.addEventListener('change', async (e) => {
+            const doctorId = e.target.value;
+
+            // UI Temizliği
+            slotsGrid.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div> Yükleniyor...';
+            slotsContainer.classList.remove('d-none');
+            noSlotMsg.classList.add('d-none');
+
+            try {
+                // Doktorun tüm randevularını çek
+                // NOT: Backend'deki 'getAppointmentsByDoctor' metodun DoctorID bekliyordu.
+                // Seçilen value zaten DoctorID olduğu için sorun yok.
+                const appointments = await ApiService.request(`/appointments/doctor/${doctorId}`, 'GET');
+
+                // Sadece AVAILABLE (Boş) ve gelecekteki slotları filtrele
+                const availableSlots = appointments.filter(app =>
+                    app.status === 'AVAILABLE' && new Date(app.appointmentDate) > new Date()
+                );
+
+                slotsGrid.innerHTML = '';
+
+                if (availableSlots.length === 0) {
+                    noSlotMsg.classList.remove('d-none');
+                    return;
+                }
+
+                // Slotları Buton Olarak Bas
+                availableSlots.forEach(slot => {
+                    const dateObj = new Date(slot.appointmentDate);
+                    const timeStr = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-outline-primary position-relative';
+                    btn.innerHTML = `<strong>${timeStr}</strong><br><small>${dateStr}</small>`;
+
+                    // Tıklayınca Randevuyu Al (Book)
+                    btn.onclick = () => this.bookAppointment(slot.id);
+
+                    slotsGrid.appendChild(btn);
+                });
+
+            } catch (error) {
+                slotsGrid.innerHTML = `<span class="text-danger">Saatler yüklenemedi: ${error.message}</span>`;
+            }
+        });
+    }
+
+    // Randevuyu Kesinleştir (Book işlemi)
+    async bookAppointment(appointmentId) {
+        if(!confirm("Bu randevuyu onaylıyor musunuz?")) return;
+
+        try {
+            const token = ApiService.getToken();
+            const user = Utils.parseJwt(token);
+
+            // Backend Endpoint: /appointments/book/{appointmentId}?patientId={patientId}
+            // Bu endpointi henüz backend'de kontrol etmedik, aşağıda kontrol edeceğiz.
+            await ApiService.request(`/appointments/book/${appointmentId}?patientId=${user.userId}`, 'POST');
+
+            alert("Randevunuz başarıyla oluşturuldu! 'Randevularım' menüsünden görebilirsiniz.");
+
+            // Sayfayı yenile veya listeye yönlendir
+            // document.querySelector('[data-page=my-appointments]').click();
+            // (Dashboard yapımıza göre manuel tetikleme gerekebilir, şimdilik basit reload:)
+            window.location.reload();
+
+        } catch (error) {
+            alert(`İşlem başarısız: ${error.message}`);
         }
     }
 
@@ -196,6 +267,82 @@ export class AppointmentManager {
                         </button>
                     </td>
                 </tr>
+            `;
+        }).join('');
+    }
+
+    async renderMyPrescriptions() {
+        this.container.innerHTML = this.getLoadingSpinner();
+
+        try {
+            const token = ApiService.getToken();
+            const user = Utils.parseJwt(token);
+
+            // Backend: /prescriptions/patient/{patientId}
+            const prescriptions = await ApiService.request(`/prescriptions/patient/${user.userId}`, 'GET');
+
+            if (prescriptions.length === 0) {
+                this.container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        Henüz adınıza yazılmış bir reçete bulunmamaktadır.
+                    </div>`;
+                return;
+            }
+
+            let html = `
+                <div class="card shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">💊 Reçetelerim</h5>
+                    </div>
+                    <div class="accordion" id="prescriptionAccordion">
+                        ${this.generatePrescriptionItems(prescriptions)}
+                    </div>
+                </div>
+            `;
+            this.container.innerHTML = html;
+
+        } catch (error) {
+            this.container.innerHTML = `<div class="alert alert-danger">Reçeteler yüklenemedi: ${error.message}</div>`;
+        }
+    }
+
+    generatePrescriptionItems(list) {
+        return list.map((pres, index) => {
+            const dateStr = new Date(pres.createdDate).toLocaleDateString('tr-TR');
+            // Backend'den doktor adı gelmezse ID yazarız (İleride DTO ile düzeltilir)
+            const doctorInfo = pres.doctorId ? `Doktor ID: ${pres.doctorId}` : 'Bilinmeyen Doktor';
+
+            // İlaçları Listele
+            const drugsHtml = pres.items.map(drug => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${drug.drugName}</strong>
+                        <div class="text-muted small">${drug.instruction || ''}</div>
+                    </div>
+                    <span class="badge bg-secondary rounded-pill">${drug.dosage}</span>
+                </li>
+            `).join('');
+
+            return `
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading${index}">
+                        <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapse${index}">
+                            <div class="d-flex w-100 justify-content-between me-3">
+                                <span>📅 ${dateStr} - <strong>${pres.diagnosis || 'Tanı Yok'}</strong></span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}"
+                         data-bs-parent="#prescriptionAccordion">
+                        <div class="accordion-body">
+                            <h6 class="text-muted mb-2">Yazan: ${doctorInfo}</h6>
+                            <ul class="list-group list-group-flush">
+                                ${drugsHtml}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             `;
         }).join('');
     }

@@ -20,4 +20,7 @@ public class DtoAppointmentResponse {
     private String doctorId;
     private String doctorFullName; // Unvan + Ad + Soyad
     private String doctorBranch;
+
+    private String patientFullName; // Hasta Adı + Soyadı
+    private String patientId;       // Lazım olabilir
 }

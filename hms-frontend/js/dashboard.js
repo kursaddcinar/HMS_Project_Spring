@@ -1,6 +1,8 @@
 import { AuthService } from './auth.js';
 import { Utils } from './utils.js';
 import { AppointmentManager } from './modules/appointment.js';
+import { DoctorManager } from './modules/doctor.js';
+
 
 export class Dashboard {
 
@@ -105,6 +107,23 @@ export class Dashboard {
                 const listManager = new AppointmentManager('main-content');
                 listManager.renderMyAppointments();
                 break;
+
+            case 'doc-appointments':
+                const docManager = new DoctorManager('main-content');
+                docManager.renderIncomingPatients();
+                docManager.initPrescriptionModal();
+                break;
+
+            case 'create-slot':
+                            const slotManager = new DoctorManager('main-content');
+                            slotManager.renderCreateSlotPage();
+                            break;
+
+            case 'my-prescriptions':
+                            // AppointmentManager içinde tanımladık
+                            const presManager = new AppointmentManager('main-content');
+                            presManager.renderMyPrescriptions();
+                            break;
 
             default:
                 this.contentArea.innerHTML = `<h3>${pageId}</h3><p>Bu sayfa yapım aşamasında.</p>`;

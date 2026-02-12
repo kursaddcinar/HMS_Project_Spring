@@ -1,5 +1,6 @@
 package com.kursaddcinar.hms_backend.repository;
 
+import com.kursaddcinar.hms_backend.data.entity.Doctor;
 import com.kursaddcinar.hms_backend.data.entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,5 @@ public interface IUserRepository extends MongoRepository<User, String> {
 
     // Email kontrolü (Opsiyonel)
     boolean existsByEmail(String email);
+
 }
