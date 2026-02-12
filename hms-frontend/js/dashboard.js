@@ -2,6 +2,7 @@ import { AuthService } from './auth.js';
 import { Utils } from './utils.js';
 import { AppointmentManager } from './modules/appointment.js';
 import { DoctorManager } from './modules/doctor.js';
+import { AdminManager } from './modules/admin.js';
 
 
 export class Dashboard {
@@ -48,8 +49,8 @@ export class Dashboard {
         }
         else if (this.userRole === Utils.ROLES.ADMIN) {
             menuItems.push(
-                { id: 'admin-users', title: 'Kullanıcı Yönetimi', icon: '👥' },
-                { id: 'admin-polyclinics', title: 'Poliklinik Yönetimi', icon: '🏥' }
+                { id: 'admin-doctors', title: 'Doktor Yönetimi', icon: '👨‍⚕️' }, // YENİ
+                { id: 'admin-users', title: 'Tüm Kullanıcılar', icon: '👥' }
             );
         }
 
@@ -124,6 +125,11 @@ export class Dashboard {
                             const presManager = new AppointmentManager('main-content');
                             presManager.renderMyPrescriptions();
                             break;
+
+            case 'admin-doctors':
+                const adminManager = new AdminManager('main-content');
+                adminManager.renderDoctorManagement();
+                break;
 
             default:
                 this.contentArea.innerHTML = `<h3>${pageId}</h3><p>Bu sayfa yapım aşamasında.</p>`;
